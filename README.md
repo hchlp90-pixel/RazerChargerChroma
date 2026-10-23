@@ -6,6 +6,11 @@ Razer Chroma 무선 충전기(Razer Wireless Charger)의 조명을 Windows PC에
 > Razer와 관계없는 개인 프로젝트입니다. Razer·Chroma 이름과 화면에 쓴 충전기 사진·아이콘·로고는 Razer Inc.의 것입니다.
 > 권리자가 요청하면 내리겠습니다.
 
+| 첫 화면 | 색 편집 | 효과 고르기 | 고급 설정 |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/main.png" width="200" alt="첫 화면"> | <img src="docs/screenshots/color.png" width="200" alt="색 편집"> | <img src="docs/screenshots/effects.png" width="200" alt="효과 고르기"> | <img src="docs/screenshots/advanced.png" width="200" alt="고급 설정"> |
+| 충전기를 USB로 연결한 모습, 충전 효과 켜고 끄기 | 색상환·색 코드·밝기·색상 강도 | 정적·브리딩·스펙트럼·웨이브 | 대기 효과, 상태 표시기, 조명 꺼짐 타이머 |
+
 ## 내려받기
 [Releases](../../releases)에서 `RazerChargerChroma.zip`을 받아 **압축을 푼 뒤** `RazerChargerChroma.exe`를 실행하세요.
 압축 파일 안에서 바로 실행하면 필요한 파일이 빠져 실행되지 않습니다.
