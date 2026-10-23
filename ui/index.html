@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Razer Chroma</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="bg"><div id="bgColor"></div><div id="bgShade"></div></div>
+
+<!-- 1. 기기 화면 (원래 앱의 fragment_audrey_device) -->
+<section class="page" id="pageMain">
+  <div class="card" id="card">
+    <img class="photo" src="img/audrey.png" alt="">
+    <div class="cardShade"></div>
+    <div class="conn" id="connChip"><span class="dot"></span><span id="connText">연결 안 됨</span></div>
+    <button class="iconBtn info" id="btnInfo" title="정보"><img src="img/information_line.svg" alt=""></button>
+    <div class="deviceHead">
+      <img class="razerLogo" src="img/ic_razer_logo_green.svg" alt="">
+      <div class="model">Wireless Charger</div>
+    </div>
+    <button class="advance" id="btnAdvanced" title="고급"><img src="img/advance_icon.svg" alt=""></button>
+    <div class="lost hidden" id="lost">
+      <div class="lostTitle" id="lostTitle">기기 찾는 중...</div>
+      <div class="lostBody" id="lostBody">충전기를 USB 케이블로 PC에 연결하거나, 전원을 켠 채로 두면 블루투스로 연결합니다.</div>
+      <button class="greenBtn" id="btnRetry">다시 시도</button>
+    </div>
+  </div>
+  <div class="effectRow" id="rowCharging" data-profile="2">
+    <img class="effIcon" src="img/icon_effect.svg" alt="">
+    <div class="effTexts"><div class="effType">충전 효과</div><div class="effName" id="nameCharging">-</div></div>
+    <label class="switch" title="켜기/끄기"><input type="checkbox" id="swCharging"><span></span></label>
+  </div>
+  <div class="dots"><span class="on"></span></div>
+</section>
+
+<!-- 2. 색상 편집 화면 (원래 앱의 chroma_view) -->
+<section class="page hidden" id="pageEditor">
+  <div class="edTop">
+    <button class="iconBtn" id="btnBack" title="뒤로"><img src="img/arrow_back_white.svg" alt=""></button>
+    <div class="edTitle" id="edTitle">충전 효과</div>
+    <div class="hexBox">
+      <input id="hexInput" class="hidden" maxlength="7" spellcheck="false" placeholder="Hex 색상 코드 입력">
+      <button class="hexBtn" id="btnHex">#</button>
+    </div>
+  </div>
+  <div class="wheelArea">
+    <canvas id="wheel"></canvas>
+    <div class="blocked hidden" id="blocked">이 효과는 편집할 수 없는 기본 색상입니다.</div>
+  </div>
+  <div class="holders">
+    <button class="ckBtn white" id="btnBright" title="LED 밝기"><img src="img/ck_ic_brightness.png" alt=""></button>
+    <div class="swatches" id="swatches">
+      <button class="swatch" data-i="0"></button>
+      <button class="swatch" data-i="1"></button>
+    </div>
+    <div class="spacer"></div>
+    <div class="modeMenu hidden" id="modeMenu"></div>
+    <button class="ckBtn black" id="btnMode" title="효과"><img id="modeIcon" src="img/ck_ic_static.png" alt=""></button>
+  </div>
+  <div class="bottom" id="bottom">
+    <div class="panel" id="pIntensity">
+      <div class="pTitle" id="intensityTitle">색상 강도</div>
+      <div class="pRow">
+        <button class="mute" id="btnMute" title="두 번째 색 끄기"><img src="img/ck_ic_mute.png" alt=""></button>
+        <input type="range" id="intensity" min="0" max="100" value="100">
+      </div>
+    </div>
+    <div class="panel" id="pBright">
+      <div class="pTitle">LED 밝기</div>
+      <input type="range" id="brightness" class="plain" min="0" max="255" value="187">
+    </div>
+    <div class="panel" id="pDirection">
+      <div class="pTitle">웨이브 방향</div>
+      <div class="pButtons">
+        <button class="rb" data-dir="left"><img src="img/ck_arrow_left_white.png" alt="왼쪽"></button>
+        <button class="rb" data-dir="right"><img src="img/ck_arrow_right_white.png" alt="오른쪽"></button>
+      </div>
+    </div>
+    <div class="panel" id="pDuration">
+      <div class="pTitle">효과 지속 시간</div>
+      <div class="pButtons">
+        <button class="rb" data-speed="0">짧게</button>
+        <button class="rb" data-speed="1">중간</button>
+        <button class="rb" data-speed="2">길게</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. 고급 화면 (원래 앱의 activity_device_advanced + layout_audrey_advanced) -->
+<section class="page hidden" id="pageAdvanced">
+  <div class="advHeader">
+    <img src="img/audrey_advanced.png" alt="">
+    <div class="advShade"></div>
+    <button class="iconBtn advBack" id="btnAdvBack" title="뒤로"><img src="img/arrow_back_white.svg" alt=""></button>
+    <div class="advName"><img class="razerLogo" src="img/ic_razer_logo_green.svg" alt=""><div class="model">Wireless Charger</div></div>
+  </div>
+  <div class="advBody">
+    <div class="effectRow box" id="rowStandby" data-profile="1">
+      <img class="effIcon ring" src="img/ic_chromaring.png" alt="">
+      <div class="effTexts"><div class="effType">대기 효과</div><div class="effName" id="nameStandby">-</div></div>
+      <label class="switch" title="켜기/끄기"><input type="checkbox" id="swStandby"><span></span></label>
+    </div>
+
+    <div class="advTitle">고급</div>
+    <div class="sep"></div>
+
+    <div class="bleOnly" id="bleOnly">
+      <div class="box setRow">
+        <div class="setTexts"><div class="setTitle">상태 표시기</div><div class="setBody">무선 충전기의 상태 표시기를 사용하거나 사용하지 않도록 설정합니다.</div></div>
+        <label class="switch"><input type="checkbox" id="swStatus"><span></span></label>
+      </div>
+      <div class="box setRow timer" id="timerCharging">
+        <div class="setTexts">
+          <div class="setTitle">충전 효과 타이머</div><div class="setBody">일정 시간이 지나면 조명을 사용하지 않습니다.</div>
+          <button class="timeVal" data-which="charging"><span class="num">15</span><span class="unit">분</span></button>
+        </div>
+        <label class="switch"><input type="checkbox" id="swTimerCharging"><span></span></label>
+      </div>
+      <div class="box setRow timer" id="timerStandby">
+        <div class="setTexts">
+          <div class="setTitle">대기 효과 타이머</div><div class="setBody">일정 시간 동안 무선 충전기를 사용하지 않으면 조명을 사용하지 않습니다.</div>
+          <button class="timeVal" data-which="standby"><span class="num">15</span><span class="unit">분</span></button>
+        </div>
+        <label class="switch"><input type="checkbox" id="swTimerStandby"><span></span></label>
+      </div>
+      <div class="bleCover hidden" id="bleCover">
+        <div>상태 표시기와 타이머는 블루투스로 연결했을 때만 바꿀 수 있습니다.<br>
+          처음 한 번은 충전기 버튼을 5~6초 길게 눌러 페어링 모드로 만든 뒤 연결하세요.<br>
+          <span style="color:#999">충전기는 기기 하나만 기억하므로 폰과의 블루투스 연결은 끊어집니다.</span></div>
+        <button class="greenBtn" id="btnBleCover">블루투스 연결</button>
+      </div>
+    </div>
+
+    <div class="advTitle small">연결</div>
+    <div class="sep"></div>
+    <div class="box setRow">
+      <div class="setTexts"><div class="setTitle">USB</div><div class="setBody" id="usbInfo">연결 안 됨</div></div>
+    </div>
+    <div class="box setRow">
+      <div class="setTexts"><div class="setTitle">블루투스</div><div class="setBody" id="bleInfo">연결 안 됨</div></div>
+      <button class="lineBtn" id="btnBle">연결</button>
+    </div>
+    <button class="box setRow linkRow" id="btnReset"><div class="setTitle danger">기기 설정 초기화</div></button>
+    <button class="box setRow linkRow" id="btnLog"><div class="setTitle">통신 기록 보기</div></button>
+    <pre id="log" class="hidden"></pre>
+    <p class="foot">Razer Chroma Configurator 2.5.199의 명령을 PC용으로 옮긴 비공식 프로그램입니다.</p>
+  </div>
+</section>
+
+<!-- 타이머 고르기 (원래 앱의 fragment_dialog_device_timer_list) -->
+<div class="sheetBack hidden" id="sheetBack">
+  <div class="sheet">
+    <div class="sheetTitle" id="sheetTitle">충전 효과 타이머</div>
+    <div id="sheetList"></div>
+  </div>
+</div>
+<div class="dialogBack hidden" id="confirmBack">
+  <div class="dialog">
+    <div class="dTitle">기기 설정 초기화</div>
+    <div class="dBody">충전기의 조명 설정을 처음 상태로 되돌릴까요?</div>
+    <div class="dBtns"><button id="confirmNo">취소</button><button id="confirmYes" class="green">초기화</button></div>
+  </div>
+</div>
+<div class="toast hidden" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

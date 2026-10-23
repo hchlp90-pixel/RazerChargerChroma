@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>충전기 크로마 조절</title>
+<style>
+  :root {
+    --bg: #0d0f0d; --panel: #161a16; --line: #2a312a; --text: #e6ece6; --dim: #93a093;
+    --accent: #44d62c; --accent-dark: #2e9a1c; --warn: #ffb347; --bad: #ff5f56;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Malgun Gothic", "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--dim); margin: 0 0 20px; font-size: 13px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent); letter-spacing: .02em; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 10px; }
+  .row:last-child { margin-bottom: 0; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--dim); min-width: 140px; }
+  select { min-width: 200px; }
+  select, input[type=number] { background: #0f120f; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; font: inherit; }
+  input[type=color] { width: 64px; height: 36px; border: 1px solid var(--line); border-radius: 6px; background: #0f120f; padding: 2px; }
+  input[type=range] { width: 220px; accent-color: var(--accent); }
+  button { background: #222922; color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 8px 14px; font: inherit; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #071007; border-color: var(--accent); font-weight: 700; }
+  button.primary:hover:not(:disabled) { background: #5ae740; }
+  button.danger { border-color: #5a2a28; color: #ffb3ae; }
+  button:disabled { opacity: .45; cursor: default; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); padding: 0; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); }
+  .dot.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .dot.busy { background: var(--warn); }
+  .note { font-size: 12.5px; color: var(--dim); margin: 6px 0 0; }
+  .warn { color: var(--warn); }
+  .info { font-size: 13px; color: var(--dim); }
+  #log { background: #070907; border: 1px solid var(--line); border-radius: 6px; height: 180px; overflow: auto; padding: 8px; font: 12px/1.45 Consolas, monospace; white-space: pre-wrap; color: #b9c7b9; margin: 0; }
+  #log .tx { color: #9fe58f; } #log .rx { color: #8fc7ff; } #log .er { color: #ff8c85; }
+  .chk { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+  .hidden { display: none !important; }
+  #unsupported { border-color: #5a4a20; }
+  @media (max-width: 520px) { input[type=range] { width: 100%; } label.f { min-width: 46%; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Razer 무선 충전기 <span>크로마</span> 조절</h1>
+  <p class="sub">Razer Chroma Configurator 앱의 블루투스 명령을 그대로 PC에서 보냅니다. (Edge·Chrome 필요)</p>
+
+  <section id="unsupported" class="hidden">
+    <h2>이 브라우저에서는 블루투스를 쓸 수 없습니다</h2>
+    <p class="note warn" id="unsupportedText"></p>
+  </section>
+
+  <section>
+    <h2>1. 연결</h2>
+    <div class="row">
+      <button class="primary" id="btnConnect">충전기 찾아 연결</button>
+      <button id="btnDisconnect" disabled>연결 끊기</button>
+      <span class="status"><span class="dot" id="dot"></span><span id="statusText">연결 안 됨</span></span>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="showAll"> 이름이 다른 기기도 목록에 보이기</label>
+    </div>
+    <p class="info" id="deviceInfo"></p>
+    <p class="note">충전기 USB 단자는 전원 전용입니다. 충전기에 전원만 꽂아 두고, PC 블루투스로 연결합니다.
+      목록에 "Razer Wireless Charger"가 보이면 고르세요. 윈도우가 페어링을 물으면 허용하면 됩니다.</p>
+  </section>
+
+  <section>
+    <h2>2. 조명 효과</h2>
+    <div class="row">
+      <label class="f">적용할 상황
+        <select id="target">
+          <option value="both">충전 중 + 대기 둘 다</option>
+          <option value="charging">충전 중 효과만</option>
+          <option value="standby">대기 효과만</option>
+        </select>
+      </label>
+      <label class="f">효과
+        <select id="effect"></select>
+      </label>
+    </div>
+    <div class="row" id="colorRow">
+      <label class="f">색 1 <input type="color" id="color1" value="#44d62c"></label>
+      <label class="f"><span><input type="checkbox" id="useColor2"> 색 2</span> <input type="color" id="color2" value="#0050ff" disabled></label>
+      <div class="row" style="margin:0" id="presets"></div>
+    </div>
+    <div class="row">
+      <label class="f">방향 (물결 등)
+        <select id="direction"><option value="right">오른쪽</option><option value="left">왼쪽</option></select>
+      </label>
+      <label class="f">속도 단계
+        <select id="speed"><option value="0">1</option><option value="1">2</option><option value="2">3</option></select>
+      </label>
+      <label class="f">밝기 <span id="brightnessLabel"></span>
+        <input type="range" id="brightness" min="0" max="255" value="187">
+      </label>
+    </div>
+    <div class="row">
+      <button class="primary" id="btnApply" disabled>효과 적용</button>
+      <button id="btnOff" disabled>조명 끄기</button>
+    </div>
+    <p class="note">"실험" 효과는 앱의 번호표에는 있지만 충전기 화면에는 안 나오던 것이라 동작하지 않을 수 있습니다.
+      속도 단계는 앱의 '지속 시간' 값(1~3)입니다.</p>
+  </section>
+
+  <section>
+    <h2>3. 충전기 설정</h2>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="statusLight" checked> 상태 표시등 켜기</label>
+      <button id="btnStatusLight" disabled>표시등 적용</button>
+    </div>
+    <div class="row">
+      <label class="f">대기 중 조명 꺼짐 (분, 0 = 안 끔)
+        <input type="number" id="standbyMin" min="0" max="1092" value="15">
+      </label>
+      <label class="f">충전 중 조명 꺼짐 (분, 0 = 안 끔)
+        <input type="number" id="chargingMin" min="0" max="1092" value="15">
+      </label>
+      <button id="btnTimers" disabled>타이머 적용</button>
+    </div>
+    <div class="row">
+      <button class="danger" id="btnReset" disabled>충전기 설정 초기화</button>
+    </div>
+    <p class="note">앱 기본값: 대기·충전 중 모두 15분 뒤 조명 꺼짐, 상태 표시등 켜짐.</p>
+  </section>
+
+  <section>
+    <h2>기록</h2>
+    <pre id="log"></pre>
+    <div class="row" style="margin-top:8px">
+      <button id="btnClearLog">기록 지우기</button>
+    </div>
+  </section>
+</main>
+
+<script src="protocol.js"></script>
+<script>
+(() => {
+  "use strict";
+  const RC = window.RazerCharger;
+  const $ = (id) => document.getElementById(id);
+  const enc = new RC.Encoder();
+  let device = null, server = null, writeChar = null, notifyChar = null;
+  let lastWrite = 0;
+  let queue = Promise.resolve();
+
+  // ---------- 기록 ----------
+  function log(text, cls) {
+    const line = document.createElement("span");
+    if (cls) line.className = cls;
+    const t = new Date().toLocaleTimeString("ko-KR", { hour12: false });
+    line.textContent = `[${t}] ${text}\n`;
+    $("log").appendChild(line);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+
+  // ---------- 저장 (이 브라우저에만) ----------
+  const SAVE_KEY = "razer-charger-chroma";
+  const FIELDS = ["target", "effect", "color1", "color2", "useColor2", "direction", "speed", "brightness", "statusLight", "standbyMin", "chargingMin", "showAll"];
+  function save() {
+    try {
+      const o = {};
+      for (const k of FIELDS) { const el = $(k); o[k] = el.type === "checkbox" ? el.checked : el.value; }
+      localStorage.setItem(SAVE_KEY, JSON.stringify(o));
+    } catch (e) { /* 저장 못 해도 동작에는 지장 없음 */ }
+  }
+  function load() {
+    try {
+      const o = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
+      for (const k of FIELDS) {
+        if (!(k in o)) continue;
+        const el = $(k);
+        if (el.type === "checkbox") el.checked = !!o[k]; else el.value = o[k];
+      }
+    } catch (e) { /* 무시 */ }
+  }
+
+  // ---------- 화면 ----------
+  function fillEffects() {
+    const sel = $("effect");
+    const base = document.createElement("optgroup"); base.label = "충전기 기본";
+    const extra = document.createElement("optgroup"); extra.label = "실험";
+    for (const e of RC.EFFECTS) {
+      const o = document.createElement("option");
+      o.value = String(e.id);
+      o.textContent = `${e.name} (${e.key})`;
+      (e.extra ? extra : base).appendChild(o);
+    }
+    sel.append(base, extra);
+    sel.value = "1";
+  }
+  const PRESETS = [["#ff0000", "빨강"], ["#ff8000", "주황"], ["#ffff00", "노랑"], ["#44d62c", "레이저 초록"], ["#00ffff", "하늘"], ["#0050ff", "파랑"], ["#a000ff", "보라"], ["#ffffff", "흰색"]];
+  function fillPresets() {
+    for (const [c, name] of PRESETS) {
+      const b = document.createElement("button");
+      b.className = "swatch"; b.style.background = c; b.title = name;
+      b.addEventListener("click", () => { $("color1").value = c; save(); });
+      $("presets").appendChild(b);
+    }
+  }
+  function effectInfo() {
+    return RC.EFFECTS.find((e) => String(e.id) === $("effect").value) || RC.EFFECTS[1];
+  }
+  function refreshForm() {
+    const e = effectInfo();
+    $("colorRow").style.opacity = e.colors === 0 ? 0.45 : 1;
+    $("color2").disabled = !$("useColor2").checked;
+    const b = Number($("brightness").value);
+    $("brightnessLabel").textContent = `${Math.round((b / 255) * 100)}%`;
+  }
+  function setState(state, text) {
+    $("dot").className = "dot" + (state === "on" ? " on" : state === "busy" ? " busy" : "");
+    $("statusText").textContent = text;
+    const on = state === "on";
+    for (const id of ["btnApply", "btnOff", "btnStatusLight", "btnTimers", "btnReset", "btnDisconnect"]) $(id).disabled = !on;
+    $("btnConnect").disabled = state === "busy";
+  }
+
+  // ---------- 블루투스 ----------
+  function supported() {
+    if (!window.isSecureContext) return "이 페이지가 보안 환경으로 열리지 않았습니다. '로컬로 열기.bat'로 열어 주세요.";
+    if (!navigator.bluetooth) return "Microsoft Edge 또는 Chrome에서 열어 주세요. (Firefox는 웹 블루투스를 지원하지 않습니다.)";
+    return null;
+  }
+
+  async function connect() {
+    const why = supported();
+    if (why) { alert(why); return; }
+    try {
+      setState("busy", "기기 고르는 중…");
+      const optionalServices = [RC.UUID.service, RC.UUID.deviceInfo];
+      const opts = $("showAll").checked
+        ? { acceptAllDevices: true, optionalServices }
+        : { filters: [{ name: RC.DEVICE_NAME }, { services: [RC.UUID.service] }], optionalServices };
+      device = await navigator.bluetooth.requestDevice(opts);
+      device.addEventListener("gattserverdisconnected", onDisconnected);
+      setState("busy", `${device.name || "기기"}에 연결 중…`);
+      log(`기기 선택: ${device.name || "(이름 없음)"}`);
+      server = await device.gatt.connect();
+      const svc = await server.getPrimaryService(RC.UUID.service);
+      writeChar = await svc.getCharacteristic(RC.UUID.write);
+      notifyChar = await svc.getCharacteristic(RC.UUID.notify);
+      // 앱과 같은 순서: 알림 특성 읽기 → 제조사·PnP ID 읽기 → 알림 켜기
+      try { await notifyChar.readValue(); } catch (e) { /* 읽기 막혀 있어도 계속 */ }
+      await readDeviceInfo();
+      try {
+        notifyChar.addEventListener("characteristicvaluechanged", (ev) => {
+          log(`받음  ${RC.hex(new Uint8Array(ev.target.value.buffer))}`, "rx");
+        });
+        await notifyChar.startNotifications();
+      } catch (e) { log(`알림 켜기 실패(명령은 보낼 수 있음): ${e.message}`, "er"); }
+      lastWrite = 0;
+      setState("on", `연결됨: ${device.name || "충전기"}`);
+      log("연결 완료");
+    } catch (e) {
+      if (e && e.name === "NotFoundError") { setState("off", "연결 안 됨"); log("기기 선택이 취소됐습니다."); return; }
+      log(`연결 실패: ${e && e.message ? e.message : e}`, "er");
+      setState("off", "연결 실패");
+      if (device && device.gatt.connected) device.gatt.disconnect();
+    }
+  }
+
+  async function readDeviceInfo() {
+    const parts = [];
+    try {
+      const di = await server.getPrimaryService(RC.UUID.deviceInfo);
+      try {
+        const v = await (await di.getCharacteristic(RC.UUID.manufacturer)).readValue();
+        parts.push(`제조사: ${new TextDecoder().decode(v.buffer)}`);
+      } catch (e) { /* 없음 */ }
+      try {
+        const v = await (await di.getCharacteristic(RC.UUID.pnpId)).readValue();
+        const b = new Uint8Array(v.buffer);
+        if (b.length >= 7) {
+          const vid = b[1] | (b[2] << 8), pid = b[3] | (b[4] << 8), ver = b[5] | (b[6] << 8);
+          parts.push(`VID 0x${vid.toString(16).padStart(4, "0")} · PID 0x${pid.toString(16).padStart(4, "0")} · 버전 0x${ver.toString(16).padStart(4, "0")}`);
+        }
+      } catch (e) { /* 없음 */ }
+    } catch (e) { /* 기기 정보 서비스가 막혀 있으면 생략 */ }
+    $("deviceInfo").textContent = parts.join("  ·  ");
+  }
+
+  function onDisconnected() {
+    writeChar = notifyChar = null;
+    setState("off", "연결 끊김");
+    log("연결이 끊겼습니다.", "er");
+  }
+
+  async function rawWrite(bytes) {
+    if (writeChar.writeValueWithResponse) await writeChar.writeValueWithResponse(bytes);
+    else await writeChar.writeValue(bytes);
+  }
+
+  // 앱처럼 하나씩 차례로 보내고, 10초 넘게 쉬었으면 깨우기 패킷부터
+  function send(label, bytes) {
+    queue = queue.then(async () => {
+      if (!writeChar) throw new Error("연결되어 있지 않습니다");
+      if (Date.now() - lastWrite > RC.WAKEUP_AFTER_MS) {
+        log(`보냄  ${RC.hex(RC.WAKEUP)}  (깨우기)`, "tx");
+        await rawWrite(RC.WAKEUP);
+      }
+      log(`보냄  ${RC.hex(bytes)}  (${label})`, "tx");
+      await rawWrite(bytes);
+      lastWrite = Date.now();
+    }).catch((e) => log(`보내기 실패 (${label}): ${e && e.message ? e.message : e}`, "er"));
+    return queue;
+  }
+
+  function hexColor(v) { return parseInt(v.slice(1), 16); }
+  function profiles() {
+    const t = $("target").value;
+    return t === "both" ? [RC.PROFILE.charging, RC.PROFILE.standby] : [RC.PROFILE[t]];
+  }
+  const PROFILE_NAME = { 2: "충전 중", 1: "대기" };
+
+  function applyEffect(effectId) {
+    const e = effectId === undefined ? effectInfo() : RC.EFFECTS.find((x) => x.id === effectId);
+    const args = {
+      effect: e.id,
+      color1: hexColor($("color1").value),
+      color2: $("useColor2").checked ? hexColor($("color2").value) : 0,
+      left: $("direction").value === "left",
+      speed: Number($("speed").value),
+    };
+    for (const p of profiles()) {
+      send(`${PROFILE_NAME[p]} 효과 ${e.name}`, enc.effect({ profile: p, ...args }));
+      if (e.id !== 0) send(`${PROFILE_NAME[p]} 밝기`, enc.brightness({ profile: p, value: Number($("brightness").value) }));
+    }
+  }
+
+  // ---------- 시작 ----------
+  fillEffects();
+  fillPresets();
+  load();
+  refreshForm();
+  setState("off", "연결 안 됨");
+  const why = supported();
+  if (why) { $("unsupported").classList.remove("hidden"); $("unsupportedText").textContent = why; }
+
+  for (const id of FIELDS) $(id).addEventListener("input", () => { refreshForm(); save(); });
+  for (const id of FIELDS) $(id).addEventListener("change", () => { refreshForm(); save(); });
+  $("btnConnect").addEventListener("click", connect);
+  $("btnDisconnect").addEventListener("click", () => { if (device && device.gatt.connected) device.gatt.disconnect(); });
+  $("btnApply").addEventListener("click", () => applyEffect());
+  $("btnOff").addEventListener("click", () => applyEffect(0));
+  $("btnStatusLight").addEventListener("click", () => send("상태 표시등", enc.statusLight($("statusLight").checked)));
+  $("btnTimers").addEventListener("click", () => {
+    const s = Math.round(Number($("standbyMin").value) * 60), c = Math.round(Number($("chargingMin").value) * 60);
+    send(`타이머 대기 ${s}초 · 충전 중 ${c}초`, enc.timers({ standby: s, charging: c }));
+  });
+  $("btnReset").addEventListener("click", () => {
+    if (confirm("충전기의 조명 설정을 초기화할까요?")) send("초기화", enc.reset());
+  });
+  $("btnClearLog").addEventListener("click", () => { $("log").textContent = ""; });
+})();
+</script>
+</body>
+</html>

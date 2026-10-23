@@ -1,0 +1,2 @@
+# 줄끝·인코딩을 손대지 않고 그대로 저장 (.bat 은 CP949, .ps1 은 BOM+CRLF 라야 Windows에서 바로 돌아감)
+* -text
